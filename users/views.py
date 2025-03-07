@@ -6,25 +6,29 @@ from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate, get_user_model
 from .serializers import RegisterSerializer, UserSerializer
+from django.db import DatabaseError
+
 
 User= get_user_model
 
 class RegisterView(APIView):
-    permission_classes=AllowAny
-    
+    permission_classes = [AllowAny]
 
-    def post(self,reqest,*args, **kwargs):
-        serializer=RegisterSerializer(data=reqest.data);
+    def post(self, request, *args, **kwargs):
+        serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():
-            user=serializer.save()
-            refresh= RefreshToken.for_user(user)
-            response = {
-                "message": "User registered successfully",
-                "data": serializer.data,
-                "access": str(refresh.access_token),
-                "refresh": str(refresh)
-            }
-            return Response(data=response, status=status.HTTP_201_CREATED)
+            try:
+                user = serializer.save()
+                refresh = RefreshToken.for_user(user)
+                response = {
+                    "message": "User registered successfully",
+                    "data": serializer.data,
+                    "access": str(refresh.access_token),
+                    "refresh": str(refresh)
+                }
+                return Response(data=response, status=status.HTTP_201_CREATED)
+            except DatabaseError as e:
+                return Response({"error": "Database error occurred"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
@@ -57,18 +61,15 @@ class LoginView(APIView):
 class UserProfileView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request, *args, **kwargs):
-        serializer = UserSerializer(request.user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
     def put(self, request, *args, **kwargs):
         user = request.user
         serializer = UserSerializer(user, data=request.data, partial=True)
         if serializer.is_valid():
-            if 'profile_picture' in request.data:  # Handle image upload separately
-                user.profile_picture = request.data['profile_picture']
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            try:
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            except DatabaseError as e:
+                return Response({"error": "Database error occurred"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class LogoutView(APIView):
