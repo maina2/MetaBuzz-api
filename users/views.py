@@ -9,7 +9,9 @@ from .serializers import RegisterSerializer, UserSerializer
 from django.db import DatabaseError
 
 
-User= get_user_model
+# Corrected: Call get_user_model() to get the User model
+User = get_user_model()
+
 
 class RegisterView(APIView):
     permission_classes = [AllowAny]
@@ -30,29 +32,24 @@ class RegisterView(APIView):
             except DatabaseError as e:
                 return Response({"error": "Database error occurred"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
 
 class LoginView(APIView):
-    permission_classes=AllowAny
+    permission_classes = [AllowAny]
 
-    def post(request,*args, **kwargs):
-        username=request.data.get("username")
-        password=request.data.ger("password")
+    def post(self, request, *args, **kwargs):
+        username = request.data.get("username")
+        password = request.data.get("password")
 
-        user=authenticate(username=username,password=password)
+        user = authenticate(username=username, password=password)
         if user:
-            refresh=RefreshToken.for_user(user)
-            response={
+            refresh = RefreshToken.for_user(user)
+            user_serializer = UserSerializer(user)  # Serialize the user data
+            response = {
                 "message": "Login successful",
                 "access": str(refresh.access_token),
                 "refresh": str(refresh),
-                "user": {
-                    "id": user.id,
-                    "first_name":user.first_name,
-                    "last_name":user.last_name,
-                    "username": user.username,
-                    "email": user.email,
-                }
+                "user": user_serializer.data  # Use the serialized user data
             }
             return Response(data=response, status=status.HTTP_200_OK)
 
@@ -61,6 +58,9 @@ class LoginView(APIView):
 class UserProfileView(APIView):
     permission_classes = [IsAuthenticated]
 
+    def get(self, request, *args, **kwargs):
+        serializer = UserSerializer(request.user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
     def put(self, request, *args, **kwargs):
         user = request.user
         serializer = UserSerializer(user, data=request.data, partial=True)
@@ -71,6 +71,7 @@ class UserProfileView(APIView):
             except DatabaseError as e:
                 return Response({"error": "Database error occurred"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]

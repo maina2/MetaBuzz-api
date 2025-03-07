@@ -20,6 +20,7 @@ import cloudinary
 import cloudinary.uploader
 import cloudinary.api
 
+load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -51,7 +52,8 @@ INSTALLED_APPS = [
     'corsheaders',  
     'rest_framework',  
     'rest_framework_simplejwt',
-    'users', 
+    'users',
+    'feed', 
 ]
 
 MIDDLEWARE = [
@@ -73,6 +75,10 @@ REST_FRAMEWORK = {
     ),
 }
 
+AUTH_USER_MODEL = 'users.CustomUser'
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+]
 ROOT_URLCONF = 'metabuzz.urls'
 
 TEMPLATES = [
@@ -115,11 +121,11 @@ tmpPostgres = urlparse(os.getenv("DATABASE_URL"))
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': tmpPostgres.path.replace('/', ''),
+        'NAME': tmpPostgres.path[1:],  # Remove the leading slash from the path
         'USER': tmpPostgres.username,
         'PASSWORD': tmpPostgres.password,
         'HOST': tmpPostgres.hostname,
-        'PORT': 5432,
+        'PORT': tmpPostgres.port or 5432,  # Default to 5432 if no port is specified
     }
 }
 
@@ -182,7 +188,3 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOW_CREDENTIALS = True
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-]
