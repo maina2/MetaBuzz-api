@@ -7,6 +7,8 @@ from .models import Like, Follow
 from posts.models import Post
 from django.contrib.auth import get_user_model
 from .serializers import LikeSerializer, FollowSerializer
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 User = get_user_model()
 class LikePostView(APIView):
@@ -49,3 +51,11 @@ class FollowUserView(APIView):
         followers = Follow.objects.filter(following=user)
         serializer = FollowSerializer(followers, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+
+def send_notification(user_id, message):
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        f"notifications_{user_id}",
+        {"type": "send_notification", "data": {"message": message}}
+    )
