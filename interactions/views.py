@@ -5,10 +5,10 @@ from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from .models import Like, Follow
 from posts.models import Post
-from users.models import User  # Ensure this matches your User model import
+from django.contrib.auth import get_user_model
 from .serializers import LikeSerializer, FollowSerializer
 
-
+User = get_user_model()
 class LikePostView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -28,12 +28,11 @@ class LikePostView(APIView):
         serializer = LikeSerializer(likes, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-
 class FollowUserView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def post(self, request, username):
-        following = get_object_or_404(User, username=username)
+    def post(self, request, user_id):
+        following = get_object_or_404(User, id=user_id)  # Fixed lookup
         if request.user == following:
             return Response({"error": "You cannot follow yourself"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -45,8 +44,8 @@ class FollowUserView(APIView):
 
         return Response({"message": "User followed"}, status=status.HTTP_201_CREATED)
 
-    def get(self, request, username):
-        user = get_object_or_404(User, username=username)
+    def get(self, request, user_id):
+        user = get_object_or_404(User, id=user_id)  # Fixed lookup
         followers = Follow.objects.filter(following=user)
         serializer = FollowSerializer(followers, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
