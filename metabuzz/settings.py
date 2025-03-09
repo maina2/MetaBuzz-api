@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'users',
     'posts',
     'interactions',
+    'notifications'
 ]
 
 MIDDLEWARE = [
@@ -82,6 +83,12 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
 ROOT_URLCONF = 'metabuzz.urls'
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
+    },
+}
 
 TEMPLATES = [
     {

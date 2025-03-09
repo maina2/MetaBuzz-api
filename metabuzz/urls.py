@@ -22,6 +22,7 @@ urlpatterns = [
     path('users/',include('users.urls')),
     path('posts/', include('posts.urls')),
     path('interactions/', include('interactions.urls')),
+    path('notifications/',include('notifications.urls')),
 
 
 ]
