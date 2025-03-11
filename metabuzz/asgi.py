@@ -10,6 +10,7 @@ from channels.auth import AuthMiddlewareStack
 import notifications.routing
 import direct_messages.routing
 
+
 application = ProtocolTypeRouter({
     "http": get_asgi_application(),  # Handle HTTP requests
     "websocket": AuthMiddlewareStack(

@@ -7,6 +7,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate, get_user_model
 from .serializers import RegisterSerializer, UserSerializer
 from django.db import DatabaseError
+from django.db import transaction
+
 
 
 # Corrected: Call get_user_model() to get the User model
@@ -89,3 +91,31 @@ class LogoutView(APIView):
             return Response({"message": "Successfully logged out"}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+
+
+
+class BulkRegisterView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        users_data = request.data  # Expecting a list of users
+        if not isinstance(users_data, list):
+            return Response({"error": "Invalid data format. Expected a list of users."}, status=status.HTTP_400_BAD_REQUEST)
+
+        created_users = []
+        errors = []
+        
+        with transaction.atomic():  # Ensures rollback in case of an error
+            for user_data in users_data:
+                serializer = RegisterSerializer(data=user_data)
+                if serializer.is_valid():
+                    user = serializer.save()
+                    created_users.append(serializer.data)
+                else:
+                    errors.append(serializer.errors)
+
+        if errors:
+            return Response({"message": "Some users could not be created", "errors": errors}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({"message": f"{len(created_users)} users created successfully", "users": created_users}, status=status.HTTP_201_CREATED)
