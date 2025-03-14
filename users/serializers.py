@@ -15,19 +15,22 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'username', 'email', 'first_name', 'last_name', 'bio', 'profile_picture')
-        read_only_fields = ('id',)  # Ensure this is a tuple
+        read_only_fields = ('id',)  
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
-
+    first_name = serializers.CharField(required=False)
+    last_name = serializers.CharField(required=False)
+    bio = serializers.CharField(required=False)
+    profile_picture = serializers.ImageField(required=False)  # Assuming this is an ImageField
+    phone = serializers.CharField(required=False)
+    
     class Meta:
         model = User
         fields = ('username', 'email', 'password', 'first_name', 'last_name', 'bio', 'profile_picture', 'phone')
 
     def create(self, validated_data):
-        # Extract the password from validated_data
         password = validated_data.pop('password')
-        # Create the user using create_user (handles password hashing)
         user = User.objects.create_user(**validated_data)
-        user.set_password(password)  # Set the password (optional, as create_user already handles it)
+        user.set_password(password)  
         user.save()
         return user
