@@ -65,6 +65,30 @@ class CommentDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = CommentSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+class PostCommentsListView(generics.ListAPIView):
+    serializer_class = CommentSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        post_id = self.kwargs["post_id"]
+        return Comment.objects.filter(post_id=post_id).order_by("-created_at")
+    
+class CreateCommentView(generics.CreateAPIView):
+    serializer_class = CommentSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def create(self, request, *args, **kwargs):
+        post_id = self.kwargs.get("post_id")  # Get post ID from URL
+        try:
+            post = Post.objects.get(id=post_id)  # Fetch the post
+        except Post.DoesNotExist:
+            return Response({"error": "Post not found"}, status=404)
+
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(user=request.user, post=post)  # Assign post and user
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)
 # Global Search View for Posts
 class PostSearchView(generics.ListAPIView):
     serializer_class = PostSerializer
