@@ -5,26 +5,28 @@ User = get_user_model()
 
 
 class UserSerializer(serializers.ModelSerializer):
-    profile_picture = serializers.SerializerMethodField()
     followers_count = serializers.SerializerMethodField()
     following_count = serializers.SerializerMethodField()
-
-    def get_profile_picture(self, obj):
-        return obj.profile_picture.url if obj.profile_picture else None
-
+    
     def get_followers_count(self, obj):
         return obj.followers.count()  
 
     def get_following_count(self, obj):
         return obj.following.count() 
-
+        
     class Meta:
         model = User
-        fields = (
-            'id', 'username', 'email', 'first_name', 'last_name', 'bio', 
-            'profile_picture', 'followers_count', 'following_count'
-        )
-        read_only_fields = ('id',)
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'bio', 
+                 'profile_picture', 'phone', 'followers_count', 'following_count']
+        read_only_fields = ['id', 'username', 'email', 'followers_count', 'following_count']
+    
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        if instance.profile_picture:
+            rep['profile_picture'] = instance.profile_picture.url
+        else:
+            rep['profile_picture'] = None
+        return rep
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
