@@ -63,6 +63,7 @@ class UserProfileView(APIView):
     def get(self, request, *args, **kwargs):
         serializer = UserSerializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
     def put(self, request, *args, **kwargs):
         user = request.user
         serializer = UserSerializer(user, data=request.data, partial=True)
@@ -70,9 +71,10 @@ class UserProfileView(APIView):
             try:
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_200_OK)
-            except DatabaseError as e:
+            except DatabaseError:
                 return Response({"error": "Database error occurred"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 class LogoutView(APIView):
