@@ -11,7 +11,7 @@ urlpatterns = [
     path('<int:post_id>/comments/', PostCommentsListView.as_view(), name='post-comments'),
     path("<int:post_id>/comments/create/", CreateCommentView.as_view(), name="create-comment"),
     path('user/<int:user_id>/posts/', UserPostsView.as_view(), name='user-posts'),
-    path('profile/<int:pk>/', UserPostDetailView.as_view(), name='post-detail'),  # Update/Delete/Detail
+    path('user/<int:pk>/', UserPostDetailView.as_view(), name='post-detail'),  # Update/Delete/Detail
 
 
 
