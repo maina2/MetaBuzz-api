@@ -5,6 +5,10 @@ from .serializers import PostSerializer, CommentSerializer
 from rest_framework.response import Response
 import random
 from django.contrib.auth import get_user_model
+from rest_framework.exceptions import NotFound
+from rest_framework.exceptions import PermissionDenied
+
+
 
 User = get_user_model()  # ✅ Get the User model dynamically
 
@@ -97,3 +101,25 @@ class PostSearchView(generics.ListAPIView):
     def get_queryset(self):
         query = self.request.query_params.get('q', '')
         return Post.objects.filter(Q(content__icontains=query) | Q(user__username__icontains=query))
+
+class UserPostsView(generics.ListAPIView):
+    serializer_class = PostSerializer
+
+    def get_queryset(self):
+        user_id = self.kwargs.get("user_id")
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            raise NotFound("User not found")
+        return Post.objects.filter(user=user).order_by('-created_at')
+    
+class UserPostDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Post.objects.all()
+    serializer_class = PostSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self):
+        post = super().get_object()
+        if post.user != self.request.user:
+            raise PermissionDenied("You do not have permission to modify this post.")
+        return post
