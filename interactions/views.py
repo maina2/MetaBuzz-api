@@ -66,3 +66,11 @@ def send_notification(user_id, message):
         f"notifications_{user_id}",
         {"type": "send_notification", "data": {"message": message}}
     )
+
+class FollowingListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        followings = Follow.objects.filter(follower=request.user)
+        serializer = FollowSerializer(followings, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
