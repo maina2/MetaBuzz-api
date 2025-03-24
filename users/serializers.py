@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
+from posts.serializers import PostSerializer
 
 User = get_user_model()
 
@@ -46,3 +47,10 @@ class RegisterSerializer(serializers.ModelSerializer):
         user.set_password(password)  
         user.save()
         return user
+    
+
+# serializers.py
+
+class UserProfileWithPostsSerializer(serializers.Serializer):
+    user = UserSerializer()
+    posts = PostSerializer(many=True)

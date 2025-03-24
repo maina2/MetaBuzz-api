@@ -3,9 +3,11 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
+from django.shortcuts import get_object_or_404
+from posts.models import  Post
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate, get_user_model
-from .serializers import RegisterSerializer, UserSerializer
+from .serializers import RegisterSerializer, UserSerializer,PostSerializer,UserProfileWithPostsSerializer
 from django.db import DatabaseError
 from django.db import transaction
 
@@ -121,3 +123,16 @@ class BulkRegisterView(APIView):
             return Response({"message": "Some users could not be created", "errors": errors}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({"message": f"{len(created_users)} users created successfully", "users": created_users}, status=status.HTTP_201_CREATED)
+
+
+class UserProfileWithPostsView(APIView):
+    def get(self, request, user_id):
+        user = get_object_or_404(User, id=user_id)
+        posts = Post.objects.filter(user=user).order_by('-created_at')
+
+        serializer = UserProfileWithPostsSerializer({
+            'user': user,
+            'posts': posts
+        })
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
