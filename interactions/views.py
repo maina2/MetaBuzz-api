@@ -34,30 +34,6 @@ class LikePostView(APIView):
         serializer = LikeSerializer(likes, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-# class FollowUserView(APIView):
-#     permission_classes = [IsAuthenticated]
-
-#     def post(self, request, user_id):
-#         following = get_object_or_404(User, id=user_id)
-#         if request.user == following:
-#             return Response({"error": "You cannot follow yourself"}, status=status.HTTP_400_BAD_REQUEST)
-
-#         follow, created = Follow.objects.get_or_create(follower=request.user, following=following)
-
-#         if not created:
-#             follow.delete()
-#             return Response({"message": "Unfollowed user"}, status=status.HTTP_204_NO_CONTENT)
-
-#         # ✅ Send real-time notification
-#         send_notification(following.id, f"{request.user.username} followed you.")
-
-#         return Response({"message": "User followed"}, status=status.HTTP_201_CREATED)
-
-#     def get(self, request, user_id):
-#         user = get_object_or_404(User, id=user_id)
-#         followers = Follow.objects.filter(following=user)
-#         serializer = FollowSerializer(followers, many=True)
-#         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class ToggleFollowView(APIView):
@@ -86,20 +62,25 @@ class ToggleFollowView(APIView):
         if existing_follow:
             # Unfollow
             existing_follow.delete()
-            return Response(
-                {"message": "User unfollowed"},
-                status=status.HTTP_200_OK
-            )
+            message = "User unfollowed"
+            is_following = False
         else:
             # Follow
             Follow.objects.create(
                 follower=request.user, 
                 followed=target_user
             )
-            return Response(
-                {"message": "User followed"},
-                status=status.HTTP_201_CREATED
-            )
+            message = "User followed"
+            is_following = True
+        
+        # Get updated followers count for the target user
+        followers_count = target_user.followers.count()
+        
+        return Response({
+            "message": message,
+            "is_following": is_following,
+            "followers_count": followers_count
+        }, status=status.HTTP_200_OK)
 
 
 class FollowedUsersListView(APIView):
@@ -134,10 +115,3 @@ def send_notification(user_id, message):
         {"type": "send_notification", "data": {"message": message}}
     )
 
-# class FollowingListView(APIView):
-#     permission_classes = [IsAuthenticated]
-
-#     def get(self, request):
-#         followings = Follow.objects.filter(follower=request.user)
-#         serializer = FollowSerializer(followings, many=True)
-#         return Response(serializer.data, status=status.HTTP_200_OK)
