@@ -2,6 +2,8 @@ from rest_framework import generics
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import get_user_model
+from rest_framework import status, permissions
+from rest_framework.views import APIView
 from .models import Conversation, Message
 from .serializers import ConversationSerializer, MessageSerializer,UserSerializer
 from rest_framework import serializers  # Add this import
@@ -39,6 +41,32 @@ class MessageListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         serializer.save(sender=self.request.user)
 
+
+class StartConversationView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, user_id):
+        try:
+            other_user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        if other_user == request.user:
+            return Response({"error": "You cannot start a conversation with yourself."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Check if a conversation already exists with both participants
+        existing = Conversation.objects.filter(participants=request.user)\
+            .filter(participants=other_user).first()
+
+        if existing:
+            serializer = ConversationSerializer(existing)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        # Otherwise, create a new conversation
+        conversation = Conversation.objects.create()
+        conversation.participants.set([request.user, other_user])
+        serializer = ConversationSerializer(conversation)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 class ConversationWithUserView(generics.ListAPIView):
     serializer_class = ConversationSerializer
     permission_classes = [IsAuthenticated]
