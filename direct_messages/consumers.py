@@ -20,7 +20,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         data = json.loads(text_data)
         sender_id = data["sender_id"]
-        text = data["message"]  # ✅ Updated key to match frontend
+        text = data["message"]  #    Updated key to match frontend
 
         User = get_user()
         sender = await User.objects.aget(id=sender_id)

@@ -23,7 +23,7 @@ class LikePostView(APIView):
             like.delete()
             return Response({"message": "Post unliked"}, status=status.HTTP_204_NO_CONTENT)
 
-        # ✅ Send real-time notification
+        #    Send real-time notification
         send_notification(post.user.id, f"{request.user.username} liked your post.")
 
         return Response({"message": "Post liked"}, status=status.HTTP_201_CREATED)
@@ -107,7 +107,7 @@ class FollowedUsersListView(APIView):
             ],
             status=status.HTTP_200_OK
         )
-# ✅ Notification function
+#    Notification function
 def send_notification(user_id, message):
     channel_layer = get_channel_layer()
     async_to_sync(channel_layer.group_send)(

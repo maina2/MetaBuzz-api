@@ -10,7 +10,7 @@ from rest_framework.exceptions import PermissionDenied
 
 
 
-User = get_user_model()  # ✅ Get the User model dynamically
+User = get_user_model()  #    Get the User model dynamically
 
 
 class PostListCreateView(generics.ListCreateAPIView):
@@ -38,14 +38,14 @@ class BulkPostCreateView(generics.CreateAPIView):
 
         created_posts = []
         for post_data in posts_data:
-            random_user = User.objects.get(id=random.choice(user_ids))  # ✅ Get actual user instance
+            random_user = User.objects.get(id=random.choice(user_ids))  #    Get actual user instance
 
-            # ✅ Remove 'user' key if it exists (it must be assigned manually)
+            #    Remove 'user' key if it exists (it must be assigned manually)
             post_data.pop("user", None)
 
             serializer = self.get_serializer(data=post_data)
             if serializer.is_valid():
-                serializer.save(user=random_user)  # ✅ Assign user manually
+                serializer.save(user=random_user)  #    Assign user manually
                 created_posts.append(serializer.data)
             else:
                 return Response(serializer.errors, status=400)
