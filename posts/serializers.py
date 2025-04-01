@@ -2,7 +2,17 @@ from rest_framework import serializers
 from .models import Post, Comment
 
 
+
+class CommentSerializer(serializers.ModelSerializer):
+    user = serializers.ReadOnlyField(source='user.username')
+
+    class Meta:
+        model = Comment
+        fields = ['id', 'user', 'post', 'text', 'created_at']
+
 class PostSerializer(serializers.ModelSerializer):
+    comments = CommentSerializer(many=True, read_only=True)  # Add this line
+
     def to_representation(self, instance):
         from users.serializers import UserSerializer  
         rep = super().to_representation(instance)
@@ -11,11 +21,5 @@ class PostSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        fields = ['id', 'user', 'content', 'image', 'created_at']
+        fields = ['id', 'user', 'content', 'image', 'created_at','comments']
 
-class CommentSerializer(serializers.ModelSerializer):
-    user = serializers.ReadOnlyField(source='user.username')
-
-    class Meta:
-        model = Comment
-        fields = ['id', 'user', 'post', 'text', 'created_at']
