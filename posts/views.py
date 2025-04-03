@@ -7,6 +7,8 @@ import random
 from django.contrib.auth import get_user_model
 from rest_framework.exceptions import NotFound
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.parsers import MultiPartParser, FormParser
+
 
 
 
@@ -17,7 +19,7 @@ class PostListCreateView(generics.ListCreateAPIView):
     queryset = Post.objects.all().order_by('-created_at')
     serializer_class = PostSerializer
     permission_classes = [permissions.IsAuthenticated]
-
+    parser_classes = [MultiPartParser, FormParser] 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 

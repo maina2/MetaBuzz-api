@@ -11,7 +11,8 @@ class CommentSerializer(serializers.ModelSerializer):
         fields = ['id', 'user', 'post', 'text', 'created_at']
 
 class PostSerializer(serializers.ModelSerializer):
-    comments = CommentSerializer(many=True, read_only=True)  # Add this line
+    comments = CommentSerializer(many=True, read_only=True)  
+    user = serializers.PrimaryKeyRelatedField(read_only=True)  
 
     def to_representation(self, instance):
         from users.serializers import UserSerializer  
@@ -22,4 +23,7 @@ class PostSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
         fields = ['id', 'user', 'content', 'image', 'created_at','comments']
-
+        extra_kwargs = {
+            'content': {'required': False}, 
+            'image': {'required': False},   
+        }
